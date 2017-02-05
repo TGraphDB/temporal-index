@@ -53,6 +53,7 @@ public class TemporalIndex {
 			unstable.take(memIndex,startTime-1);
 			memIndex.clear(startTime);
 			memBoundary = startTime;
+			backUpMemIndex();
 		}
 		else{
 			memIndex.insert(startTime, endTime, value, id);
@@ -61,6 +62,20 @@ public class TemporalIndex {
 	}
 	
 	
+	private void backUpMemIndex() {
+		
+		File file = new File(dbDir+"/" + "memdisc");
+		if(file.exists()){
+			TimeIndex discMem = new TimeIndex(dbDir, "memdisc");
+			discMem.clear();
+		}
+		TimeIndex discMem = new TimeIndex(dbDir, "memdisc");
+		discMem.flushFrom(this.memIndex);
+		discMem.close();
+	}
+
+
+
 	public long[] get( int startTime, int endTime, byte[] value ){
 		Set<Long> toret = new HashSet<>();
 		toret.addAll(this.memIndex.get(Math.max(startTime, this.memIndex.getStartTime()), endTime, value));
