@@ -1,7 +1,9 @@
 package org.act.temporal_index.tree;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -100,6 +102,26 @@ public class MemIndex {
 		timeTree.put(startTime, value3);
 		if( value2 != null )
 			timeTree.put(endTime+1, value2);
+		{
+			Iterator<Entry<Integer, long[]>> iterator = timeTree.entryIterator(startTime, false, endTime+1, false);
+			Map<Integer, long[]> toInsert = new HashMap<>();
+			while(iterator.hasNext()){
+				Entry<Integer, long[]> entry = iterator.next();
+				Set<Long> set2 = new HashSet<>();
+				for( long l : entry.getValue() )
+					set2.add(l);
+				set2.add(id);
+				long[] newValue = new long[set2.size()];
+				int index2 = 0;
+				for(long l : set2 ){
+					newValue[index2++] = l;
+				}
+				toInsert.put(entry.getKey(), newValue);
+			}
+			for( Entry<Integer, long[]> entry : toInsert.entrySet() ){
+				timeTree.put(entry.getKey(), entry.getValue());
+			}
+		}
 		this.startTime = Math.min(startTime, this.startTime);
 		this.size++;
 	}
@@ -157,13 +179,13 @@ public class MemIndex {
 		if(!(timeTree.containsKey(startTime)&&timeTree.containsKey(endTime+1)))
 			return false;
 		Set<Integer> deleteList = new HashSet<>();
-//		Iterator<Entry<Integer, long[]>> iterator = timeTree.entryIterator(startTime, true, endTime, true);
-//		while( iterator.hasNext() ){
-//			Entry<Integer, long[]> entry = iterator.next();
-//			deleteList.add(entry.getKey());
-//		}
-		deleteList.add(startTime);
-		deleteList.add(endTime+1);
+		Iterator<Entry<Integer, long[]>> iterator = timeTree.entryIterator(startTime, true, endTime+1, false);
+		while( iterator.hasNext() ){
+			Entry<Integer, long[]> entry = iterator.next();
+			deleteList.add(entry.getKey());
+		}
+//		deleteList.add(startTime);
+//		deleteList.add(endTime+1);
 		for(int i : deleteList ){
 			Set<Long> set = new HashSet<>();
 			for( long l : timeTree.get(i) ){
